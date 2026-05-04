@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seeing Theory - Interactive Probability</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #16213e; }
+        ::-webkit-scrollbar-thumb { background: #0f3460; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #e94560; }
+        
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(233, 69, 96, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(233, 69, 96, 0.6); }
+        }
+        @keyframes coin-flip {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(1800deg); }
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-slide-in { animation: slideIn 0.8s ease-out forwards; }
+        .coin-anim { animation: coin-flip 0.6s ease-out; }
+        
+        /* Glassmorphism */
+        .glass {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Interactive Elements */
+        .probability-bar {
+            transition: height 0.3s ease, background-color 0.3s ease;
+        }
+        .probability-bar:hover {
+            filter: brightness(1.2);
+        }
+        
+        /* Math Typography */
+        .math {
+            font-family: 'JetBrains Mono', monospace;
+            font-style: italic;
+        }
+        
+        /* Grid Background */
+        .bg-grid {
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+    </style>
+</head>
+<body class="bg-grid min-h-screen">
+
+    <!-- Navigation -->
+    <nav class="fixed top-0 w-full z-50 glass border-b border-white/10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-violet-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-sm">S</span>
+                    </div>
+                    <span class="text-xl font-semibold tracking-tight text-white">Seeing Theory</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#basic" class="text-gray-300 hover:text-pink-400 transition-colors text-sm font-medium">Basic Probability</a>
+                    <a href="#compound" class="text-gray-300 hover:text-pink-400 transition-colors text-sm font-medium">Compound Probability</a>
+                    <a href="#distributions" class="text-gray-300 hover:text-pink-400 transition-colors text-sm font-medium">Distributions</a>
+                    <a href="#statistical" class="text-gray-300 hover:text-pink-400 transition-colors text-sm font-medium">Statistical Inference</a>
+                </div>
+                <button class="md:hidden text-gray-300 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-20 px-4 relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-b from-pink-500/10 to-transparent pointer-events-none"></div>
+        <div class="max-w-4xl mx-auto text-center relative z-10 animate-slide-in">
+            <h1 class="text-5xl md:text-7xl font-bold text-white mb-6 tracking-tight">
+                Basic <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-violet-400">Probability</span>
+            </h1>
+            <p class="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed mb-8">
+                A visual introduction to probability and statistics. Interact with the concepts below to see theory come alive.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <button onclick="document.getElementById('chance-events').scrollIntoView({behavior: 'smooth'})" 
+                        class="px-8 py-3 bg-gradient-to-r from-pink-500 to-violet-600 rounded-full text-white font-medium hover:shadow-lg hover:shadow-pink-500/25 transition-all transform hover:-translate-y-1">
+                    Start Exploring
+                </button>
+                <button class="px-8 py-3 glass rounded-full text-gray-300 font-medium hover:bg-white/10 transition-all">
+                    View Chapters
+                </button>
+            </div>
+        </div>
+        
+        <!-- Decorative Elements -->
+        <div class="absolute top-40 left-10 w-20 h-20 border border-pink-500/20 rounded-full animate-float" style="animation-delay: 0s;"></div>
+        <div class="absolute top-60 right-20 w-32 h-32 border border-violet-500/20 rounded-full animate-float" style="animation-delay: 2s;"></div>
+        <div class="absolute bottom-20 left-1/4 w-16 h-16 border border-blue-500/20 rounded-full animate-float" style="animation-delay: 4s;"></div>
+    </section>
+
+    <!-- Chapter 1: Chance Events -->
+    <section id="chance-events" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6 animate-slide-in">
+                    <div class="inline-block px-3 py-1 rounded-full bg-pink-500/10 text-pink-400 text-xs font-semibold tracking-wider uppercase">
+                        Chapter 1
+                    </div>
+                    <h2 class="text-4xl font-bold text-white">Chance Events</h2>
+                    <p class="text-gray-400 leading-relaxed text-lg">
+                        Randomness is all around us. Probability theory is the mathematical framework that allows us to analyze chance events in a logically sound manner. The probability of an event is a number indicating how likely that event will occur.
+                    </p>
+                    <div class="glass rounded-xl p-6 space-y-4">
+                        <p class="text-sm text-gray-400">A classic example is a fair coin toss. The probability of flipping heads or tails is <span class="math text-pink-400">1/2</span>.</p>
+                        <div class="flex items-center justify-between text-sm text-gray-500">
+                            <span>Heads: <span id="heads-count" class="text-white font-mono">0</span></span>
+                            <span>Tails: <span id="tails-count" class="text-white font-mono">0</span></span>
+                            <span>Total: <span id="total-count" class="text-white font-mono">0</span></span>
+                        </div>
+                        <div class="h-2 bg-gray-700 rounded-full overflow-hidden">
+                            <div id="heads-bar" class="h-full bg-gradient-to-r from-pink-500 to-pink-400 transition-all duration-500" style="width: 50%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Interactive Coin -->
+                <div class="glass rounded-2xl p-8 flex flex-col items-center space-y-6 animate-slide-in" style="animation-delay: 0.2s;">
+                    <div class="relative w-48 h-48 perspective-1000">
+                        <div id="coin" class="w-full h-full rounded-full bg-gradient-to-br from-yellow-300 to-yellow-600 shadow-2xl flex items-center justify-center transform transition-transform duration-600 border-4 border-yellow-200/30">
+                            <span id="coin-face" class="text-4xl font-bold text-yellow-900">H</span>
+                        </div>
+                        <div class="absolute inset-0 rounded-full bg-gradient-to-tr from-white/20 to-transparent pointer-events-none"></div>
+                    </div>
+                    
+                    <div class="flex space-x-4">
+                        <button onclick="flipCoin()" class="px-6 py-2 bg-pink-500 hover:bg-pink-600 rounded-lg text-white font-medium transition-colors">
+                            Flip Coin
+                        </button>
+                        <button onclick="flipCoin100()" class="px-6 py-2 glass hover:bg-white/10 rounded-lg text-gray-300 font-medium transition-colors">
+                            Flip 100 times
+                        </button>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 text-center max-w-xs">
+                        As the number of flips increases, the frequency approaches 50%.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chapter 2: Expectation -->
+    <section id="expectation" class="py-20 px-4 bg-black/20">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <!-- Interactive Die -->
+                <div class="glass rounded-2xl p-8 flex flex-col items-center space-y-6 order-2 md:order-1">
+                    <div class="relative">
+                        <div id="die" class="w-32 h-32 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl shadow-2xl flex items-center justify-center transform transition-all duration-300 border border-blue-300/30">
+                            <div id="die-dots" class="grid grid-cols-3 gap-2 p-4">
+                                <!-- Dots generated by JS -->
+                            </div>
+                        </div>
+                        <div class="absolute -inset-2 bg-blue-500/20 rounded-2xl blur-xl -z-10"></div>
+                    </div>
+                    
+                    <div class="flex space-x-4">
+                        <button onclick="rollDie()" class="px-6 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white font-medium transition-colors">
+                            Roll Die
+                        </button>
+                        <button onclick="rollDie100()" class="px-6 py-2 glass hover:bg-white/10 rounded-lg text-gray-300 font-medium transition-colors">
+                            Roll 100 times
+                        </button>
+                    </div>
+                    
+                    <div class="w-full space-y-2">
+                        <div class="flex justify-between text-xs text-gray-400">
+                            <span>Running Mean</span>
+                            <span id="running-mean" class="text-blue-400 font-mono">0.00</span>
+                        </div>
+                        <div class="h-32 w-full bg-gray-800/50 rounded-lg p-2 relative overflow-hidden">
+                            <canvas id="meanChart" width="400" height="120"></canvas>
+                        </div>
+                        <p class="text-xs text-gray-500 text-center">Converging to expectation: <span class="math text-blue-400">E[X] = 3.5</span></p>
+                    </div>
+                </div>
+                
+                <div class="space-y-6 order-1 md:order-2">
+                    <div class="inline-block px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-semibold tracking-wider uppercase">
+                        Chapter 2
+                    </div>
+                    <h2 class="text-4xl font-bold text-white">Expectation</h2>
+                    <p class="text-gray-400 leading-relaxed text-lg">
+                        The expectation of a random variable is a number that attempts to capture the center of that random variable's distribution. It can be interpreted as the long-run average of many independent samples.
+                    </p>
+                    <div class="glass rounded-xl p-6">
+                        <div class="text-center text-lg mb-4 math text-gray-300">
+                            E[X] = Σ x · P(x)
+                        </div>
+                        <p class="text-sm text-gray-400 text-center">
+                            For a fair die: <span class="math">(1+2+3+4+5+6)/6 = 3.5</span>
+                        </p>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-sm text-gray-400 font-medium">Die Distribution (adjust weights):</p>
+                        <div class="flex items-end justify-between h-24 gap-1" id="die-bars">
+                            <!-- Bars generated by JS -->
+                        </div>
+                        <div class="flex justify-between text-xs text-gray-500 px-1">
+                            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chapter 3: Variance -->
+    <section id="variance" class="py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div class="space-y-6">
+                    <div class="inline-block px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-semibold tracking-wider uppercase">
+                        Chapter 3
+                    </div>
+                    <h2 class="text-4xl font-bold text-white">Variance</h2>
+                    <p class="text-gray-400 leading-relaxed text-lg">
+                        Whereas expectation provides a measure of centrality, the variance of a random variable quantifies the spread of that random variable's distribution.
+                    </p>
+                    <div class="glass rounded-xl p-6">
+                        <div class="text-center text-lg mb-4 math text-gray-300">
+                            Var(X) = E[(X - E[X])²]
+                        </div>
+                        <p class="text-sm text-gray-400">
+                            Draw cards and observe how the running average of squared differences converges to the true variance.
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Interactive Cards -->
+                <div class="glass rounded-2xl p-8 space-y-6">
+                    <div class="flex justify-center space-x-2 mb-4" id="card-deck">
+                        <!-- Cards generated by JS -->
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button onclick="drawCard()" class="px-6 py-2 bg-emerald-500 hover:bg-emerald-600 rounded-lg text-white font-medium transition-colors">
+                            Draw Card
+                        </button>
+                        <button onclick="drawCard100()" class="px-6 py-2 glass hover:bg-white/10 rounded-lg text-gray-300 font-medium transition-colors">
+                            Draw 100 times
+                        </button>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div class="glass rounded-lg p-3 text-center">
+                            <div class="text-gray-400 text-xs mb-1">Running Variance</div>
+                            <div id="running-variance" class="text-emerald-400 font-mono text-xl">0.00</div>
+                        </div>
+                        <div class="glass rounded-lg p-3 text-center">
+                            <div class="text-gray-400 text-xs mb-1">True Variance</div>
+                            <div id="true-variance" class="text-blue-400 font-mono text-xl">8.25</div>
+                        </div>
+                    </div>
+                    
+                    <div class="h-32 w-full bg-gray-800/50 rounded-lg p-2">
+                        <canvas id="varianceChart" width="400" height="120"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Chapter Grid -->
+    <section class="py-20 px-4 bg-black/20">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold text-white mb-12 text-center">Explore More Chapters</h2>
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Chapter Cards -->
+                <div class="group glass rounded-xl p-6 hover:bg-white/10 transition-all cursor-pointer transform hover:-translate-y-2">
+                    <div class="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Basic Probability</h3>
+                    <p class="text-gray-400 text-sm">Chance events, expectation, and variance</p>
+                </div>
+                
+                <div class="group glass rounded-xl p-6 hover:bg-white/10 transition-all cursor-pointer transform hover:-translate-y-2">
+                    <div class="w-12 h-12 rounded-full bg-violet-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-violet-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Compound Probability</h3>
+                    <p class="text-gray-400 text-sm">Set theory, counting, and conditional probability</p>
+                </div>
+                
+                <div class="group glass rounded-xl p-6 hover:bg-white/10 transition-all cursor-pointer transform hover:-translate-y-2">
+                    <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Probability Distributions</h3>
+                    <p class="text-gray-400 text-sm">Random variables, discrete and continuous distributions</p>
+                </div>
+                
+                <div class="group glass rounded-xl p-6 hover:bg-white/10 transition-all cursor-pointer transform hover:-translate-y-2">
+                    <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <svg class="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <h3 class="text-white font-semibold mb-2">Statistical Inference</h3>
+                    <p class="text-gray-400 text-sm">Estimation, confidence intervals, and hypothesis testing</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-4 border-t border-white/10">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div class="flex items-center space-x-3 mb-4 md:mb-0">
+                <div class="w-8 h-8 bg-gradient-to-br from-pink-500 to-violet-600 rounded-lg flex items-center justify-center">
+                    <span class="text-white font-bold text-sm">S</span>
+                </div>
+                <span class="text-lg font-semibold text-white">Seeing Theory</span>
+            </div>
+            <div class="text-gray-500 text-sm">
+                An interactive visual introduction to probability and statistics
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Coin Simulation
+        let heads = 0, tails = 0, total = 0;
+        
+        function flipCoin() {
+            const coin = document.getElementById('coin');
+            const face = document.getElementById('coin-face');
+            
+            coin.classList.add('coin-anim');
+            setTimeout(() => coin.classList.remove('coin-anim'), 600);
+            
+            setTimeout(() => {
+                const isHeads = Math.random() < 0.5;
+                if (isHeads) {
+                    heads++;
+                    face.textContent = 'H';
+                    coin.className = coin.className.replace(/from-\w+-\d+ to-\w+-\d+/, 'from-yellow-300 to-yellow-600');
+                } else {
+                    tails++;
+                    face.textContent = 'T';
+                    coin.className = coin.className.replace(/from-\w+-\d+ to-\w+-\d+/, 'from-gray-300 to-gray-500');
+                }
+                total++;
+                updateCoinStats();
+            }, 300);
+        }
+        
+        function flipCoin100() {
+            let count = 0;
+            const interval = setInterval(() => {
+                flipCoin();
+                count++;
+                if (count >= 100) clearInterval(interval);
+            }, 50);
+        }
+        
+        function updateCoinStats() {
+            document.getElementById('heads-count').textContent = heads;
+            document.getElementById('tails-count').textContent = tails;
+            document.getElementById('total-count').textContent = total;
+            const headsPct = total > 0 ? (heads / total) * 100 : 50;
+            document.getElementById('heads-bar').style.width = headsPct + '%';
+        }
+        
+        // Die Simulation
+        let dieRolls = [];
+        let dieWeights = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6];
+        let meanChart;
+        
+        function initDieBars() {
+            const container = document.getElementById('die-bars');
+            container.innerHTML = '';
+            for (let i = 0; i < 6; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'flex-1 bg-blue-500/50 rounded-t cursor-pointer hover:bg-blue-400 transition-all probability-bar';
+                bar.style.height = (dieWeights[i] * 200) + '%';
+                bar.onclick = () => adjustDieWeight(i);
+                container.appendChild(bar);
+            }
+        }
+        
+        function adjustDieWeight(index) {
+            dieWeights[index] += 0.05;
+            const sum = dieWeights.reduce((a, b) => a + b, 0);
+            dieWeights = dieWeights.map(w => w / sum);
+            initDieBars();
+            updateTrueVariance();
+        }
+        
+        function rollDie() {
+            const die = document.getElementById('die');
+            die.style.transform = 'rotateX(360deg) rotateY(360deg)';
+            setTimeout(() => die.style.transform = 'rotateX(0) rotateY(0)', 300);
+            
+            let rand = Math.random();
+            let value = 1;
+            let cumsum = 0;
+            for (let i = 0; i < 6; i++) {
+                cumsum += dieWeights[i];
+                if (rand <= cumsum) {
+                    value = i + 1;
+                    break;
+                }
+            }
+            
+            setTimeout(() => {
+                renderDieFace(value);
+                dieRolls.push(value);
+                updateMeanChart();
+            }, 150);
+        }
+        
+        function rollDie100() {
+            let count = 0;
+            const interval = setInterval(() => {
+                rollDie();
+                count++;
+                if (count >= 100) clearInterval(interval);
+            }, 50);
+        }
+        
+        function renderDieFace(n) {
+            const dots = document.getElementById('die-dots');
+            dots.innerHTML = '';
+            const positions = [
+                [], [4], [0,8], [0,4,8], [0,2,6,8], [0,2,4,6,8], [0,2,3,5,6,8]
+            ];
+            for (let i = 0; i < 9; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'w-3 h-3 rounded-full ' + (positions[n].includes(i) ? 'bg-white' : 'bg-transparent');
+                dots.appendChild(dot);
+            }
+        }
+        
+        function updateMeanChart() {
+            const mean = dieRolls.reduce((a, b) => a + b, 0) / dieRolls.length;
+            document.getElementById('running-mean').textContent = mean.toFixed(2);
+            
+            if (!meanChart) {
+                const ctx = document.getElementById('meanChart').getContext('2d');
+                meanChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Running Mean',
+                            data: [],
+                            borderColor: '#60a5fa',
+                            backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointRadius: 0
+                        }, {
+                            label: 'Expected',
+                            data: [],
+                            borderColor: '#e94560',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { display: false },
+                            y: { 
+                                min: 1, 
+                                max: 6, 
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#9ca3af', font: { size: 10 } }
+                            }
+                        },
+                        animation: { duration: 0 }
+                    }
+                });
+            }
+            
+            const expected = dieWeights.reduce((sum, w, i) => sum + w * (i + 1), 0);
+            meanChart.data.labels.push(dieRolls.length);
+            meanChart.data.datasets[0].data.push(mean);
+            meanChart.data.datasets[1].data.push(expected);
+            
+            if (meanChart.data.labels.length > 100) {
+                meanChart.data.labels.shift();
+                meanChart.data.datasets[0].data.shift();
+                meanChart.data.datasets[1].data.shift();
+            }
+            meanChart.update();
+        }
+        
+        // Card Simulation
+        let cardDraws = [];
+        let deck = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let varianceChart;
+        
+        function initDeck() {
+            const container = document.getElementById('card-deck');
+            container.innerHTML = '';
+            deck.forEach((val, idx) => {
+                const card = document.createElement('div');
+                card.className = 'w-10 h-14 bg-white rounded border-2 border-gray-600 flex items-center justify-center text-gray-800 font-bold cursor-pointer hover:border-emerald-400 transition-colors select-none';
+                card.textContent = val;
+                card.onclick = () => toggleCard(idx);
+                container.appendChild(card);
+            });
+            updateTrueVariance();
+        }
+        
+        function toggleCard(idx) {
+            if (deck.includes(idx + 1)) {
+                deck.splice(deck.indexOf(idx + 1), 1);
+            } else {
+                deck.push(idx + 1);
+                deck.sort((a, b) => a - b);
+            }
+            initDeck();
+        }
+        
+        function drawCard() {
+            if (deck.length === 0) return;
+            const val = deck[Math.floor(Math.random() * deck.length)];
+            cardDraws.push(val);
+            updateVarianceChart();
+        }
+        
+        function drawCard100() {
+            let count = 0;
+            const interval = setInterval(() => {
+                drawCard();
+                count++;
+                if (count >= 100) clearInterval(interval);
+            }, 50);
+        }
+        
+        function updateTrueVariance() {
+            if (deck.length === 0) {
+                document.getElementById('true-variance').textContent = '0.00';
+                return;
+            }
+            const mean = deck.reduce((a, b) => a + b, 0) / deck.length;
+            const variance = deck.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / deck.length;
+            document.getElementById('true-variance').textContent = variance.toFixed(2);
+        }
+        
+        function updateVarianceChart() {
+            const mean = cardDraws.reduce((a, b) => a + b, 0) / cardDraws.length;
+            const runningVar = cardDraws.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / cardDraws.length;
+            document.getElementById('running-variance').textContent = runningVar.toFixed(2);
+            
+            if (!varianceChart) {
+                const ctx = document.getElementById('varianceChart').getContext('2d');
+                varianceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            label: 'Running Variance',
+                            data: [],
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderWidth: 2,
+                            tension: 0.4,
+                            pointRadius: 0
+                        }, {
+                            label: 'True Variance',
+                            data: [],
+                            borderColor: '#3b82f6',
+                            borderDash: [5, 5],
+                            borderWidth: 2,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { display: false },
+                            y: { 
+                                grid: { color: 'rgba(255,255,255,0.1)' },
+                                ticks: { color: '#9ca3af', font: { size: 10 } }
+                            }
+                        },
+                        animation: { duration: 0 }
+                    }
+                });
+            }
+            
+            const trueMean = deck.reduce((a, b) => a + b, 0) / deck.length;
+            const trueVar = deck.reduce((sum, val) => sum + Math.pow(val - trueMean, 2), 0) / deck.length;
+            
+            varianceChart.data.labels.push(cardDraws.length);
+            varianceChart.data.datasets[0].data.push(runningVar);
+            varianceChart.data.datasets[1].data.push(trueVar);
+            
+            if (varianceChart.data.labels.length > 100) {
+                varianceChart.data.labels.shift();
+                varianceChart.data.datasets[0].data.shift();
+                varianceChart.data.datasets[1].data.shift();
+            }
+            varianceChart.update();
+        }
+        
+        // Initialize
+        initDieBars();
+        renderDieFace(1);
+        initDeck();
+    </script>
+</body>
+</html>
